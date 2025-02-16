@@ -7,9 +7,9 @@ A simple yet powerful **URL Shortener Web App** built with **Golang**. This proj
 
 ## 📸 Screenshots
 
-| Web Page |
-|-----------|
-| ![Home](assests/WebPage.png) |
+| Main Page | Example |
+|-----------|-----------|
+| ![Home](assests/BeforeShorten.png) | ![Example](assests/AfterShorten.png) |
 
 ---
 
