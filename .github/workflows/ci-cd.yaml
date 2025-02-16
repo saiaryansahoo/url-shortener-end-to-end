@@ -20,6 +20,7 @@ jobs:
 
     - name: Set up Go Modules
       run: |
+        cd backend
         go mod tidy
 
     - name: Build Go Backend
