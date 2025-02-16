@@ -18,9 +18,13 @@ jobs:
       with:
         go-version: '1.19'
 
+    - name: Set up Go Modules
+      run: |
+        go mod tidy
+
     - name: Build Go Backend
       run: |
-        go build -o url-shortener ./backend
+        go build -o url-shortener
 
     - name: Build & Tag Docker Image
       run: |
