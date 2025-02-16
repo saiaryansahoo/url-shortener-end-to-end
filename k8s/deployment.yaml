@@ -15,5 +15,6 @@ spec:
       containers:
       - name: url-shortener
         image: url-shortener:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
