@@ -132,7 +132,7 @@ This project uses **GitHub Actions** to automate:
 ---
 
 ## 📜 License
-This project is licensed under the **MIT License**.
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
