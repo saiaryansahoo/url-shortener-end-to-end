@@ -10,57 +10,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.23'
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23' # Ensure it matches your go.mod version
 
-    - name: Set up Go Modules
-      run: |
-        cd backend
-        go mod tidy
+      - name: Verify go.mod exists or initialize module
+        working-directory: backend
+        run: |
+          if [ ! -f go.mod ]; then
+            go mod init url-shortener
+            go mod tidy
+          fi
 
-    - name: Build Go Backend
-      run: |
-        go build -o url-shortener
+      - name: Build Go App
+        working-directory: backend
+        run: go build -o url-shortener
 
-    - name: Build & Tag Docker Image
-      run: |
-        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/url-shortener:latest .
+      - name: Build Docker Image
+        run: docker build -t url-shortener .
 
-    - name: Log in to Docker Hub
-      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+      - name: Log in to Docker Hub
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_PASS: ${{ secrets.DOCKER_HUB_TOKEN }}
+        run: |
+          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-    - name: Push Docker Image to Docker Hub
-      run: |
-        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/url-shortener:latest
+      - name: Push Docker Image
+        run: |
+          docker tag url-shortener ${{ secrets.DOCKER_HUB_USERNAME }}/url-shortener:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/url-shortener:latest
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Set Up Minikube
-      uses: medyagh/setup-minikube@v0.0.14
-      with:
-        driver: docker
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
 
-    - name: Install kubectl
-      run: |
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-
-    - name: Deploy to Minikube
-      run: |
-        kubectl apply -f k8s/deployment.yaml
-        kubectl apply -f k8s/service.yaml
-        kubectl rollout status deployment url-shortener
-
-    - name: Verify Deployment
-      run: kubectl get pods,svc
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
