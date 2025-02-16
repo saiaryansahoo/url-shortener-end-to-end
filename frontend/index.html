@@ -3,77 +3,201 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>URL Shortener</title>
-  <!-- Tailwind CSS CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <!-- Custom CSS -->
+  <title>🔥 Shockingly Beautiful URL Shortener</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .gradient-bg {
-      background: linear-gradient(135deg, #6EE7B7, #3B82F6);
+    /* Animated Background */
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
-    .footer {
-      position: fixed;
-      bottom: 0;
+    body {
+      background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460, #e94560);
+      background-size: 300% 300%;
+      animation: gradientFlow 6s ease infinite;
+    }
+
+    /* Glassmorphism Card */
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      padding: 20px;
+      transition: all 0.3s ease-in-out;
+    }
+
+    /* Neon Input Box */
+    .neon-input {
       width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      outline: none;
+      transition: all 0.3s ease-in-out;
       text-align: center;
-      padding: 1rem;
-      background-color: rgba(255, 255, 255, 0.8);
+    }
+    .neon-input:focus {
+      border-color: #00c9ff;
+      box-shadow: 0 0 20px #00c9ff;
+    }
+
+    /* Glowing Button */
+    .glow-btn {
+      padding: 12px 20px;
+      font-size: 18px;
+      border-radius: 10px;
+      background: linear-gradient(45deg, #ff416c, #ff4b2b);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease-in-out;
+    }
+    .glow-btn:hover {
+      box-shadow: 0 0 25px #ff416c;
+      transform: scale(1.05);
+    }
+
+    /* Copy Button */
+    .copy-btn {
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 8px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+    }
+    .copy-btn:hover {
+      box-shadow: 0 0 15px #27ae60;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transform: translateX(100%);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Flashing Tab Title */
+    @keyframes flashTitle {
+      0% { color: #ff416c; }
+      50% { color: #00c9ff; }
+      100% { color: #ff416c; }
+    }
+    .flashing-title {
+      animation: flashTitle 1s infinite;
     }
   </style>
 </head>
-<body class="gradient-bg min-h-screen flex items-center justify-center">
-  <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-    <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">URL Shortener</h1>
-    <div class="mb-4">
-      <input
-        type="text"
-        id="urlInput"
-        placeholder="Enter your long URL here"
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+<body class="min-h-screen flex items-center justify-center px-4 text-white">
+  <div class="glass w-full max-w-lg text-center fade-in">
+    <h1 class="text-4xl font-extrabold mb-6">🚀 Shorten Your URL</h1>
+
+    <div class="relative mb-6">
+      <input 
+        type="text" 
+        id="urlInput" 
+        placeholder="Paste your long URL here..." 
+        class="neon-input"
       />
+      <button
+        onclick="shortenURL()"
+        id="shortenBtn"
+        class="mt-4 glow-btn"
+      >
+        Shorten
+      </button>
     </div>
-    <button
-      onclick="shortenURL()"
-      class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
-    >
-      Shorten URL
-    </button>
-    <div id="shortURL" class="mt-4 text-center text-blue-600 font-medium"></div>
+
+    <div id="shortURL" class="mt-5 hidden text-lg font-medium">
+      <p>Shortened URL:</p>
+      <span id="shortenedLink" class="text-blue-400 underline block text-lg font-bold mt-2"></span>
+      <button 
+        onclick="copyToClipboard()" 
+        class="mt-3 copy-btn"
+      >
+        Copy
+      </button>
+    </div>
   </div>
 
-  <!-- Footer -->
-  <div class="footer text-gray-600">
-    Made by Aryan with ❤️
-  </div>
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">✅ Copied to Clipboard!</div>
 
-  <!-- JavaScript -->
   <script>
     function shortenURL() {
       const url = document.getElementById('urlInput').value;
       if (!url) {
-        alert('Please enter a URL');
+        showToast("❌ Please enter a URL", "red");
         return;
       }
 
       fetch('/shorten', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ original_url: url }),
       })
-        .then((response) => response.json())
-        .then((data) => {
-          const shortURL = `${window.location.origin}/r/${data.short_url}`;
-          document.getElementById(
-            'shortURL'
-          ).innerHTML = `Short URL: <a href="${shortURL}" target="_blank" class="underline">${shortURL}</a>`;
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-          alert('Failed to shorten URL');
-        });
+      .then(response => response.json())
+      .then(data => {
+        const shortURL = `${window.location.origin}/r/${data.short_url}`;
+        document.getElementById('shortenedLink').innerHTML = `<a href="${shortURL}" target="_blank">${shortURL}</a>`;
+        document.getElementById('shortURL').classList.remove('hidden');
+        showToast("✅ URL Shortened Successfully!", "green");
+      })
+      .catch(error => {
+        showToast("❌ Failed to shorten URL", "red");
+        console.error('Error:', error);
+      });
     }
+
+    function copyToClipboard() {
+      const link = document.getElementById('shortenedLink').innerText;
+      navigator.clipboard.writeText(link);
+      showToast("✅ Copied to Clipboard!", "blue");
+    }
+
+    function showToast(message, color) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.background = color;
+      toast.classList.add('show');
+      
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Flashing Tab Notification
+    let flashTitleInterval;
+    function flashTab() {
+      let originalTitle = document.title;
+      let flashing = false;
+      flashTitleInterval = setInterval(() => {
+        document.title = flashing ? originalTitle : "🔥 Shorten Your URL!";
+        flashing = !flashing;
+      }, 1000);
+    }
+
+    window.addEventListener("focus", () => clearInterval(flashTitleInterval));
+    window.addEventListener("blur", flashTab);
   </script>
 </body>
 </html>
