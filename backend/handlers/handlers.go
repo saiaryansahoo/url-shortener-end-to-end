@@ -9,6 +9,7 @@ import (
 
 var urlStore = make(map[string]string)
 
+// ShortenURL handles shortening of URLs.
 func ShortenURL(w http.ResponseWriter, r *http.Request) {
 	var req models.URLRequest
 	json.NewDecoder(r.Body).Decode(&req)
@@ -19,6 +20,7 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// RedirectURL handles redirections from short URLs.
 func RedirectURL(w http.ResponseWriter, r *http.Request) {
     path := r.URL.Path
 
