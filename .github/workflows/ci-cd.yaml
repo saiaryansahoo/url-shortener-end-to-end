@@ -8,35 +8,43 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
         go-version: '1.19'
 
-    - name: Build
+    - name: Build Go Backend
       run: |
-        cd backend
-        go build -o url-shortener .
+        go build -o url-shortener ./backend
 
-    - name: Build Docker image
-      run: docker build -t url-shortener .
+    - name: Build & Tag Docker Image
+      run: |
+        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/url-shortener:latest .
 
     - name: Log in to Docker Hub
       run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-    - name: Push Docker image
+    - name: Push Docker Image to Docker Hub
       run: |
-        docker tag url-shortener ${{ secrets.DOCKER_HUB_USERNAME }}/url-shortener:latest
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/url-shortener:latest
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set Up Minikube
+      uses: medyagh/setup-minikube@v0.0.14
+      with:
+        driver: docker
 
     - name: Install kubectl
       run: |
@@ -47,3 +55,7 @@ jobs:
       run: |
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
+        kubectl rollout status deployment url-shortener
+
+    - name: Verify Deployment
+      run: kubectl get pods,svc
